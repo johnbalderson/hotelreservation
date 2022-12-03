@@ -128,7 +128,6 @@ public class MainMenu {
         switch (option) {
             // Find and reserve room
             case 1 -> {
-                // System.out.println(optionText[0].substring(3));
                 System.out.println(UNDERLINE);
                 reserveRoom();
                 System.out.println(UNDERLINE);
@@ -137,7 +136,6 @@ public class MainMenu {
 
             // Show reservations
             case 2 -> {
-                // System.out.println(optionText[1].substring(3));
                 System.out.println(UNDERLINE);
                 if (!customerExists) {
                     System.out.println(ACCOUNT_REQUIRED);
@@ -151,7 +149,6 @@ public class MainMenu {
 
             // Log in or create account
             case 3 -> {
-                // System.out.println(optionText[2].substring(3));
                 System.out.println(UNDERLINE);
                 if (!customerExists) {
                     loginOrCreateAccount();
@@ -168,7 +165,7 @@ public class MainMenu {
                             isLoggedIn = false;
                             loginOrCreateAccount();
                         } else if (response.equals("n")) {
-                            selectOption(null, 1, 5);
+                            selectOption(null, 0, 5);
                         } else {
                             System.out.println("Please enter Y or N.");
                         }
@@ -178,7 +175,6 @@ public class MainMenu {
 
             // Open Admin menu
             case 4 -> {
-                // System.out.println(optionText[3].substring(3));
                 System.out.println(UNDERLINE);
                 try {
                     AdminMenu.runAdminApp();
@@ -238,7 +234,7 @@ public class MainMenu {
             System.out.println(UNDERLINE);
 
             // menu showing all the room descriptions
-            option = selectOption(ROOM_MENU, 1,3);
+            option = selectOption(ROOM_MENU, 0,3);
 
             // enable user to choose from the menu
             switch (option){
@@ -254,7 +250,7 @@ public class MainMenu {
                         }
                         continue;
                     }
-                    break;    
+                    break;
                 case 2:
                     // enter new dates
                     continue;
