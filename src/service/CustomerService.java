@@ -8,11 +8,15 @@ import java.util.Map;
 
 public class CustomerService {
 
-    private static CustomerService INSTANCE = new CustomerService();
+    private static final CustomerService SINGLETON = new CustomerService();
 
-    public static CustomerService getInstance() {return INSTANCE;}
+    private final Map<String, Customer> customers = new HashMap<>();
 
-    private static final Map<String, Customer> customers = new HashMap<String, Customer>();
+    private CustomerService() {}
+    public static CustomerService getSingleton()
+          {return SINGLETON;}
+
+
 
     public void addCustomer(String email, String firstName, String lastName) {
         Customer customer = new Customer(firstName, lastName, email);
