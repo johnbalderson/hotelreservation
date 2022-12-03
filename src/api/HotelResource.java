@@ -12,8 +12,8 @@ import java.util.Date;
 
 public class HotelResource {
 
-    private static final CustomerService customerService = CustomerService.getInstance();
-    private static final ReservationService reservationService = ReservationService.getInstance();
+    private static final CustomerService customerService = CustomerService.getSingleton();
+    private static final ReservationService reservationService = ReservationService.getSingleton();
 
     public static Customer getCustomer(String email) {
         return customerService.getCustomer(email);
@@ -45,12 +45,12 @@ public class HotelResource {
             Collection<IRoom> recommendedRooms;
             Calendar calendar = Calendar.getInstance();
 
-            // add 1 week to check in date
+            // add 1 week to checkindate
             calendar.setTime(checkIn);
             calendar.add(Calendar.WEEK_OF_YEAR, 1);
             Date newCheckIn = Date.from(calendar.toInstant());
 
-            // add 1 week to check out date
+            // add 1 week to chekoutdate
             calendar.setTime(checkOut);
             calendar.add(Calendar.WEEK_OF_YEAR, 1);
             Date newCheckOut = Date.from(calendar.toInstant());

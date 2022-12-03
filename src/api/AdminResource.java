@@ -10,8 +10,8 @@ import java.util.List;
 
 public class AdminResource {
 
-    private static final CustomerService customerService = CustomerService.getInstance();
-    private static final ReservationService reservationService = ReservationService.getInstance();
+    private static final CustomerService customerService = CustomerService.getSingleton();
+    private static final ReservationService reservationService = ReservationService.getSingleton();
 
     public static Customer getCustomer(String email){
         return customerService.getCustomer(email);
@@ -22,7 +22,7 @@ public class AdminResource {
     }
 
     public static Collection<IRoom> getAllRooms(){
-        return reservationService.getRoomList().values();
+        return reservationService.getAllRooms();
     }
 
     public static Collection<Customer> getAllCustomers() {
@@ -31,6 +31,4 @@ public class AdminResource {
     public static void displayAllReservations() {
         reservationService.printAllReservation();
     }
-
-
 }
