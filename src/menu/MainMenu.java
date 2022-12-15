@@ -4,15 +4,15 @@ import api.HotelResource;
 import model.Customer;
 import model.IRoom;
 import model.Reservation;
-
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.InputMismatchException;
 import java.util.Optional;
 import java.util.Scanner;
-
 import java.util.*;
+
+
 
 public class MainMenu {
     //Menu constants
@@ -22,6 +22,9 @@ public class MainMenu {
     public static String getMainMenu(){
         return MAIN_MENU;
     }
+
+    static SimpleDateFormat standardDate = new SimpleDateFormat("MM/dd/yyyy");
+
     private static final String UNDERLINE = "-------------------------------";
     private static final String MAIN_MENU = """
             1. Find and reserve a room
@@ -57,43 +60,59 @@ public class MainMenu {
     private static final String DEFAULT_DATE_FORMAT = "MM/dd/yyyy";
     private static Date checkInDate;
 
-    public static Date getCheckInDate() {
-        return checkInDate;
-    }
+    // getter and setter for check-in date
+
+//    public static Date getCheckInDate() {
+//        return checkInDate;
+//    }
 
     public static void setCheckInDate(Date checkInDate) {
         MainMenu.checkInDate = checkInDate;
     }
 
-    public static Date getCheckOutDate() {
-        return checkOutDate;
-    }
+    private static Date checkOutDate;
+
+    // getter and setter for cheeck-out date
+
+//    public static Date getCheckOutDate() {
+//        return checkOutDate;
+//    }
 
     public static void setCheckOutDate(Date checkOutDate) {
         MainMenu.checkOutDate = checkOutDate;
     }
 
-    private static Date checkOutDate;
+
 
     // Scanner
     private static Scanner scanner = new Scanner(System.in);
 
     // Customer in the session
     private static Customer customer;
-    public static void setCustomer(Customer customer) {
-        MainMenu.customer = customer;
-    }
+
+    // getter and setter for customer
 
     public static Customer getCustomer() {
         return customer;
     }
+    public static void setCustomer(Customer customer) {
+        MainMenu.customer = customer;
+    }
+
+
 
     // Current reservation
     static IRoom chosenRoom;
 
     // MAIN METHODS
 
-    // Show main menu and option selection
+    // Show main menu and option selections
+
+    // 1) Find and reserve a room
+    // 2) See my reservations
+    // 3) Create an account (with name and e-mail address)
+    // 4) Go to the ADMIN menu
+    // 5) Exit
     public static void showMenu(String MENU){
         Optional<String> input = Optional.ofNullable(MENU);
         String menu = input.isPresent() ? input.get() : MAIN_MENU;
@@ -108,6 +127,7 @@ public class MainMenu {
             showMenu(MENU);
             System.out.println("Select your option: ");
 
+            // validate option entry
             try {
                 option = scanner.nextInt();
                 optionIsValid = (option >= rangeMinimum && option <= rangeMaximum);
@@ -122,11 +142,11 @@ public class MainMenu {
 
     // Enter selected main menu option
     public static void openOptionFromMainMenu(int option) {
-        String[] optionText = MAIN_MENU.split(System.lineSeparator());
+
         boolean customerExists = customer != null;
 
         switch (option) {
-            // Find and reserve room
+            // option 1 - Find and reserve room
             case 1 -> {
                 System.out.println(UNDERLINE);
                 reserveRoom();
@@ -134,7 +154,7 @@ public class MainMenu {
                 returnDialog();
             }
 
-            // Show reservations
+            // option 2 - Show reservations
             case 2 -> {
                 System.out.println(UNDERLINE);
                 if (!customerExists) {
@@ -147,7 +167,7 @@ public class MainMenu {
                 returnDialog();
             }
 
-            // Log in or create account
+            // option 3 - Log in or create account
             case 3 -> {
                 System.out.println(UNDERLINE);
                 if (!customerExists) {
@@ -158,14 +178,14 @@ public class MainMenu {
                         System.out.println("You are currently logged in. Sign out? Enter Y(es) / N(o)");
                         String response = scanner.next();
                         response = response.substring(0,1).toLowerCase();
-                        System.out.println(response);
+                        // System.out.println(response);
 
                         if (response.equals("y")) {
                             customer = HotelResource.getCustomer("");
                             isLoggedIn = false;
                             loginOrCreateAccount();
                         } else if (response.equals("n")) {
-                            selectOption(null, 0, 5);
+                            selectOption(MAIN_MENU, 0, 5);
                         } else {
                             System.out.println("Please enter Y or N.");
                         }
@@ -173,7 +193,7 @@ public class MainMenu {
                 }
             }
 
-            // Open Admin menu
+            // option 4 - go to ADMIN menu
             case 4 -> {
                 System.out.println(UNDERLINE);
                 try {
@@ -183,7 +203,7 @@ public class MainMenu {
                 }
             }
 
-            // Close application
+            // option 5 - Close application
             case 5 -> exitApp();
         }
     }
@@ -194,41 +214,54 @@ public class MainMenu {
 
         while (!isReserved) {
             // fetch available rooms based on check in and checkout dates
-            Collection<IRoom> availableRooms = findARoom();
+             Collection<IRoom> availableRooms = findARoom();
+            //Collection<IRoom> availableRooms = HotelResource.findARoom(checkInDate, checkOutDate);
 
-            // Itemise available rooms
-            Map<Integer, IRoom> itemisedRooms = new HashMap<>();
+
+
+            // Count number of available rooms
+            Map<Integer, IRoom> countRooms = new HashMap<>();
             int item = 1;
             for (IRoom room : availableRooms) {
-                itemisedRooms.put(item, room);
+                countRooms.put(item, room);
                 item++;
             }
 
             // number of rooms returned
-            int numberOfRooms = itemisedRooms.size();
+            int numberOfRooms = countRooms.size();
 
-            if (numberOfRooms == 0){
-                System.out.println("Unfortunately, there are no available rooms for your chosen date. Would you like to try alternative dates? " +
-                        "\n Y(es) / N(o)");
+            // if there are no more available rooms, then suggest to user dates one week from today
+            while (availableRooms.isEmpty()){
 
-                String userResponse = scanner.next().substring(0,1).toLowerCase();
-                scanner.nextLine();
+                Calendar calendar = Calendar.getInstance();
 
-                switch (userResponse) {
-                    case "y":
-                        continue;
-                    case "n":
-                        // show main menu
-                        openOptionFromMainMenu(selectOption(MAIN_MENU, 1, 5));
-                        break;
-                }
+                // add 1 week to check-in date
+                calendar.setTime(checkInDate);
+                calendar.add(Calendar.WEEK_OF_YEAR, 1);
+                Date newCheckInDate = Date.from(calendar.toInstant());
+
+                // add 1 week to check-out date
+                calendar.setTime(checkOutDate);
+                calendar.add(Calendar.WEEK_OF_YEAR, 1);
+                Date newCheckOutDate = Date.from(calendar.toInstant());
+
+                // look for rooms using new date range of one week later
+                availableRooms = HotelResource.findARoom(newCheckInDate, newCheckOutDate);
+
+                // let user know there are no rooms available from the original date range
+                //     but there are some available one week later, and show user those dates
+
+                System.out.println("There are no more available rooms from " +
+                        standardDate.format(checkInDate) + " tp " + standardDate.format(checkOutDate));
+                System.out.println("We recommend you try booking rooms from "+
+                            standardDate.format(newCheckInDate) + " to " + standardDate.format(newCheckOutDate));
             }
 
             // chosen room;
             int option;
 
             // show all available rooms
-            for (Map.Entry entry : itemisedRooms.entrySet()) {
+            for (Map.Entry entry : countRooms.entrySet()) {
                 System.out.println(entry);
             }
             System.out.println(UNDERLINE);
@@ -236,10 +269,15 @@ public class MainMenu {
             // menu showing all the room descriptions
             option = selectOption(ROOM_MENU, 0,3);
 
+            // 1) Reserve a room
+            // 2) Enter new dates
+            // 3) Return to the main menu
+            // 0) Exit
+
             // enable user to choose from the menu
             switch (option){
                 case 1:
-                    // account is required
+                    // if there's no customer, prompt user to create account
                     if (customer == null) {
                         System.out.println(ACCOUNT_REQUIRED);
                         int accountOption = selectOption(ACCOUNT_MENU, 1,2);
@@ -252,7 +290,7 @@ public class MainMenu {
                     }
                     break;
                 case 2:
-                    // enter new dates
+                    // enter new date range
                     continue;
                 case 3:
                     // show main menu
@@ -264,7 +302,8 @@ public class MainMenu {
             }
 
             boolean optionIsValid = false;
-            // enter the room number of choice
+            // enter the option number corresponding to the room number chosen
+            // validate option number exists on room menu
             while (!optionIsValid){
                 try {
                     System.out.println("Please choose a number from the list.");
@@ -278,15 +317,17 @@ public class MainMenu {
                     scanner.nextLine();
                 }
             }
-            chosenRoom = itemisedRooms.get(option);
-            System.out.println("Your have successfully reserved room " + chosenRoom.getRoomNumber() + ".");
+            chosenRoom = countRooms.get(option);
+            System.out.println("You have successfully reserved room " + chosenRoom.getRoomNumber() + ".");
 
             isReserved = true;
         }
 
+        // book the room
         return HotelResource.bookARoom(customer.getEmail(), chosenRoom, checkInDate, checkOutDate);
     }
 
+    // enter the check-in and check-out dates
     private static Collection<IRoom> findARoom() {
         String checkIn;
         String checkOut;
@@ -324,16 +365,18 @@ public class MainMenu {
 
         } while (!(checkInDateIsValid && checkOutDateIsValid));
 
-        // Found rooms
+        // Find a room using the check-in and check-out dates
         return HotelResource.findARoom(checkInDate, checkOutDate);
     }
 
-    // if 2. See all reservations- needs login
+
+
+    // option 2 - See all reservations- needs login
     private static void showReservations(String email) {
         if (customer == null) {
             loginOrCreateAccount();
         }
-        Collection<Reservation> reservations = HotelResource.getCustomersReservations(email);
+        Collection<Reservation> reservations = HotelResource.getCustomerReservations(email);
         if (reservations == null){
             System.out.println("You do not have any reservations currently!\n");
             openOptionFromMainMenu(selectOption(MAIN_MENU, 1, 5));
@@ -344,7 +387,7 @@ public class MainMenu {
         }
     }
 
-    // if 3. login or create new account
+    // option 3- Login to existing account or create a new account
     private static void createAccount() {
         String email = "";
         String firstName;
@@ -359,7 +402,7 @@ public class MainMenu {
 
         while (!emailIsValid){
             try {
-                System.out.println("Please enter your email address: ");
+                System.out.println("Please enter your e-mail address: ");
                 email = scanner.next();
                 HotelResource.createACustomer(email, firstName, lastName);
                 emailIsValid = true;
@@ -373,6 +416,7 @@ public class MainMenu {
         System.out.println("Account creation successful. Welcome "+ getCustomer().getFirstName()+"!\n");
     }
 
+    // log into the account, and validate
     private static void logInToAccount(){
         System.out.println("Please enter your email address: ");
         String email = scanner.next();
@@ -384,6 +428,7 @@ public class MainMenu {
         System.out.println("Welcome back "+ customer.getFirstName()+".");
     }
 
+    // login or create a new account
     public static void loginOrCreateAccount(){
         int accountOption = selectOption(ACCOUNT_MENU, 1,3);
         switch (accountOption) {
@@ -395,12 +440,17 @@ public class MainMenu {
         openOptionFromMainMenu(selectOption(MAIN_MENU, 1, 5));
     }
 
-    // Exit app from anywhere
+    // Exit app
     public static void exitApp(){
-        System.out.println("Thank you for your visit. Good bye.");
+        System.out.println("Thank you for visiting. Goodbye and have a great day.");
         scanner.close();
         System.exit(0);
     }
+
+    // ask user what to do next
+
+    // 1) Return to the main menu
+    // 2) Exit
 
     public static void returnDialog() {
         System.out.println("What would you like to do? ");
@@ -411,6 +461,7 @@ public class MainMenu {
         }
     }
 
+    // run the main menu app
     public static void runMainApp() {
         System.out.println(UNDERLINE);
         System.out.println(WELCOME_MESSAGE);

@@ -13,7 +13,7 @@ public class AdminMenu {
     private static Collection<Customer> allCustomers = AdminResource.getAllCustomers();
 
     private static final String WELCOME_MESSAGE = "" +
-            "Welcome to the Admin Space";
+            "Welcome to the Udacity Hotel Reservation Administration Menu";
     private static final String UNDERLINE = "-------------------------------";
     private static final String ADMIN_MENU = """
             1. See all customers
@@ -36,16 +36,18 @@ public class AdminMenu {
             2. Return to the main menu
             """;
 
+    // use scanner to parse entries in menu
     private static Scanner scanner = new Scanner(System.in);
     // while isRunning
     // Show the admin menu list 1 - 5
 
     // Show main menu and option selection
-    public static void showMenu(String MENU){
+    public static void showMenu(String MENU) {
         Optional<String> input = Optional.ofNullable(MENU);
         String menu = input.isPresent() ? input.get() : ADMIN_MENU;
         System.out.println(menu);
     }
+
     public static int selectOption(String MENU, int rangeMinimum, int rangeMaximum) {
         int option = 0;
 
@@ -58,8 +60,10 @@ public class AdminMenu {
             try {
                 option = scanner.nextInt();
                 optionIsValid = (option >= rangeMinimum && option <= rangeMaximum);
-                if (!optionIsValid) {System.out.println(INVALID_OPTION);}
-            } catch (InputMismatchException e){
+                if (!optionIsValid) {
+                    System.out.println(INVALID_OPTION);
+                }
+            } catch (InputMismatchException e) {
                 System.out.println("You have not entered a number. " + INVALID_OPTION);
                 scanner.nextLine();
             }
@@ -67,23 +71,28 @@ public class AdminMenu {
         return option;
     }
 
-    public static void openOptionFromMainMenu(int option) {
-        String[] optionText = ADMIN_MENU.split(System.lineSeparator());
+    public static void openOptionsFromAdminMenu(int option) {
+
+        // 1) See all customers
+        // 2) See all rooms
+        // 3) See all reservations
+        // 4) Add a room
+        // 5) Return to main menu
 
         switch (option) {
 
-            // When 1 pressed: See all customers
-            //use AdminResource.getAllCustomers
+            // option 1 - See all customers (AdminResource.getAllCustomers)
+
             case 1 -> {
-               // System.out.println(optionText[0].substring(3));
+
                 System.out.println(UNDERLINE);
                 showAllCustomers();
                 System.out.println(UNDERLINE);
                 returnDialog();
             }
 
-            // when 2 pressed: See all rooms
-            // Use AdminResource.getAllRooms
+            // option 2 - See all rooms (AdminResource.getAllRooms)
+
             case 2 -> {
                 // System.out.println(optionText[1].substring(3));
                 System.out.println(UNDERLINE);
@@ -92,8 +101,8 @@ public class AdminMenu {
                 returnDialog();
             }
 
-            // when 3 pressed: See all reservations
-            // use AdminResource.displayAllReservations
+            // option 3 - See all reservations (AdminResource.displayAllReservations)
+
             case 3 -> {
                 // System.out.println(optionText[2].substring(3));
                 System.out.println(UNDERLINE);
@@ -102,18 +111,18 @@ public class AdminMenu {
                 returnDialog();
             }
 
-            // when 4 pressed: Add a Room
-            // Use AdminResource.addroom
+            // option 4 - Add a Room (Use AdminResource.addroom)
+
             case 4 -> {
-               // System.out.println(optionText[3].substring(3));
+                // System.out.println(optionText[3].substring(3));
                 System.out.println(UNDERLINE);
                 addARoom();
                 System.out.println(UNDERLINE);
                 returnDialog();
             }
 
-            // when 5 pressed: return to main menu
-            // Run MainMenu.main()
+            // option 5 - return to main menu (run MainMenu.runMainApp)
+            //
             case 5 -> {
                 try {
                     MainMenu.runMainApp();
@@ -135,121 +144,143 @@ public class AdminMenu {
             IRoom room;
             // open menu
 
-            // enter room number
-            String roomNumber = "";
-            // while hast next
+            // validate room number
+
+            int roomNumber = 0;
             boolean hasRoomNumber = false;
             while (!hasRoomNumber) {
+                // enter room number
                 System.out.println("Enter the room number: ");
-                roomNumber = scanner.next();
-                hasRoomNumber = true;
-            }
 
-            Double price = 0.0;
-            boolean hasPrice = false;
-            while (!hasPrice) {
-                // enter price
-                System.out.println("Enter the price of the room: ");
-                // while has next double
                 try {
-                    price = scanner.nextDouble();
-                    hasPrice = price > 0;
+                    roomNumber = scanner.nextInt();
+                    hasRoomNumber = roomNumber > 0;
                 } catch (InputMismatchException e) {
-                    System.out.println("Please enter a valid price in numbers in the format X.XX");
+                    System.out.println("Room number must be numeric.");
                     scanner.nextLine();
                 }
             }
 
+            // validate price
 
-            // enter room type
-            RoomType roomType = null;
-            boolean hasRoomType = false;
-            while (!hasRoomType) {
-                // only 1 0r 2
-                int type = selectOption(ROOM_TYPE_MENU, 1,2);
-                hasRoomType = (type == 1 || type == 2);
-                if (hasRoomType){
-                    switch (type) {
-                        case 1 -> roomType = RoomType.SINGLE;
-                        case 2 -> roomType = RoomType.DOUBLE;
+
+                Double price = 0.0;
+                boolean hasPrice = false;
+                while (!hasPrice) {
+                    // enter price
+                    System.out.println("Enter the price of the room: ");
+
+                    try {
+                        price = scanner.nextDouble();
+                        hasPrice = price > 0;
+                    } catch (InputMismatchException e) {
+                        System.out.println("Please enter a valid numeric price in the format x.xx .");
+                        scanner.nextLine();
                     }
-                } else {
-                    System.out.println(INVALID_OPTION);
+                }
+
+
+                // enter room type
+                RoomType roomType = null;
+                boolean hasRoomType = false;
+                while (!hasRoomType) {
+                    // only 1 0r 2
+                    int type = selectOption(ROOM_TYPE_MENU, 1, 2);
+                    hasRoomType = (type == 1 || type == 2);
+                    if (hasRoomType) {
+                        switch (type) {
+                            case 1 -> roomType = RoomType.SINGLE;
+                            case 2 -> roomType = RoomType.DOUBLE;
+                        }
+                    } else {
+                        System.out.println(INVALID_OPTION);
+                    }
+                }
+
+                // add a room
+                String roomNumberString = String.valueOf(roomNumber);
+                room = new Room(roomNumberString, price, roomType);
+                rooms.add(room);
+                System.out.println("Room " + roomNumberString + " added.\n" +
+                        UNDERLINE);
+
+                // ask if they would like to add another room
+                System.out.println("Would you like to enter another room? Enter Y(es) / N(o)");
+                String response = scanner.next();
+                response = response.substring(0, 1).toLowerCase();
+
+                // exit loop if no
+                switch (response) {
+                    case "y":
+                        scanner.nextLine();
+                        continue;
+                    case "n":
+                        isFinished = true;
                 }
             }
 
-            // add a room
-            room = new Room(roomNumber, price, roomType);
-            rooms.add(room);
-            System.out.println("Room " + roomNumber + " added.\n" +
-                    UNDERLINE);
+            //Add all rooms
+            AdminResource.addRoom(rooms);
+            openOptionsFromAdminMenu(selectOption(ADMIN_MENU, 1, 5));
+        }
 
-            // ask if they would like to add another room
-            System.out.println("Would you like to enter another room? Enter Y(es) / N(o)");
-            String response = scanner.next();
-            response = response.substring(0,1).toLowerCase();
+        // show all reservations
+        private static void showAllReservations () {
+            AdminResource.displayAllReservations();
+        }
 
-            // exit loop if no
-            switch (response){
-                case "y":
-                    scanner.nextLine();
-                    continue;
-                case "n":
-                    isFinished = true;
+        // show all the rooms
+        private static void showAllRooms () {
+            String roomHeader = String.format("%-12s", "Room Number");
+            String typeHeader = String.format("%-12s", "Type");
+            String priceHeader = String.format("%-12s", "Price");
+
+            System.out.println(roomHeader + "|" + typeHeader + "|" + priceHeader);
+            Collection<IRoom> allRooms = AdminResource.getAllRooms();
+            for (IRoom room : allRooms) {
+                System.out.println(room);
             }
         }
 
-        //Add all rooms
-        AdminResource.addRoom(rooms);
-        openOptionFromMainMenu(selectOption(ADMIN_MENU, 1, 5));
-    }
-
-    private static void showAllReservations() {
-        AdminResource.displayAllReservations();
-    }
-
-    private static void showAllRooms() {
-        String roomHeader = String.format("%-12s", "Room Number");
-        String typeHeader = String.format("%-12s", "Type");
-        String priceHeader = String.format("%-12s", "Price");
-
-        System.out.println(roomHeader + "|" + typeHeader + "|" + priceHeader);
-        Collection<IRoom> allRooms = AdminResource.getAllRooms();
-        for (IRoom room : allRooms){
-            System.out.println(room);
+        // show all the customers
+        public static void showAllCustomers () {
+            System.out.println(String.format("%-12s", "First Name") +
+                    "|" + String.format("%-12s", "Surname") +
+                    "|" + String.format("%-12s", "Email Address"));
+            for (Customer customer : allCustomers) {
+                System.out.println(customer);
+            }
         }
-    }
 
-    public static void showAllCustomers() {
-        System.out.println(String.format("%-12s", "First Name") +
-                "|" + String.format("%-12s", "Surname") +
-                "|" + String.format("%-12s", "Email Address"));
-        for (Customer customer: allCustomers) {
-            System.out.println(customer);
-        }
-    }
+        // ask user what they'd like to do next
 
-    public static void returnDialog() {
-        System.out.println("What would you like to do? ");
-        int option = selectOption(RETURN_MENU, 1, 2);
-        switch (option){
-            case 1 -> openOptionFromMainMenu(selectOption(ADMIN_MENU, 1, 5));
-            case 2 -> {
-                try {
-                    MainMenu.runMainApp();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+        // 1) return to admin menu
+        // 2) return to main menu
+
+        public static void returnDialog () {
+            System.out.println("What would you like to do? ");
+            int option = selectOption(RETURN_MENU, 1, 2);
+            switch (option) {
+                case 1 -> openOptionsFromAdminMenu(selectOption(ADMIN_MENU, 1, 5));
+                case 2 -> {
+                    try {
+                        MainMenu.runMainApp();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         }
-    }
-    public static void runAdminApp() throws Exception {
-        System.out.println(UNDERLINE);
-        System.out.println(WELCOME_MESSAGE);
-        System.out.println(UNDERLINE);
-        int option = selectOption(ADMIN_MENU, 1, 5);
-        openOptionFromMainMenu(option);
-        scanner.close();
+
+        // run the Admin menu
+        public static void runAdminApp () throws Exception {
+            System.out.println(UNDERLINE);
+            System.out.println(WELCOME_MESSAGE);
+            System.out.println(UNDERLINE);
+            int option = selectOption(ADMIN_MENU, 1, 5);
+            openOptionsFromAdminMenu(option);
+            scanner.close();
+        }
+
     }
 
-}
