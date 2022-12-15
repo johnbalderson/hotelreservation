@@ -3,113 +3,135 @@ package service;
 import model.Customer;
 import model.IRoom;
 import model.Reservation;
-
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 
 public class ReservationService {
 
-    private static final ReservationService SINGLETON = new ReservationService();
-    private static final int RECOMMENDED_ROOMS_DEFAULT_PLUS_DAYS = 7;
+    // Create singleton object
 
-    private final Map<String, IRoom> rooms = new HashMap<>();
+    private static final ReservationService SINGLETON = new ReservationService();
+
+    // Keep collections of all rooms and reservations
+    private static Map<String, IRoom> rooms = new HashMap<>();
+
     private final Map<String, Collection<Reservation>> reservations = new HashMap<>();
 
-    private ReservationService() {}
+
+    // -----------------------------------------------------------------------
+
+    private ReservationService() {
+    }
+
+    // return singleton of ReservationService class
 
     public static ReservationService getSingleton() {
         return SINGLETON;
     }
 
-    public void addRoom(final IRoom room) {
+
+
+    public Map<String, IRoom> getRoomList() {
+        return rooms;
+    }
+
+    // Methods
+
+    // add room to collection
+    public void addRoom(IRoom room) {
         rooms.put(room.getRoomNumber(), room);
     }
 
-    public IRoom getARoom(final String roomNumber) {
-        return rooms.get(roomNumber);
+    // find room that matches one picked from menu
+    public IRoom getARoom(String roomNo) {
+        return rooms.get(roomNo);
     }
 
-    public Collection<IRoom> getAllRooms() {
-        return rooms.values();
-    }
+    public Reservation reserveARoom(Customer customer, IRoom room, Date checkInDate, Date checkOutDate) {
 
-    public Reservation reserveARoom(final Customer customer, final IRoom room,
-                                    final Date checkInDate, final Date checkOutDate) {
-        final Reservation reservation = new Reservation(customer, room, checkInDate, checkOutDate);
+        Reservation reservation = new Reservation(customer, room, checkInDate, checkOutDate);
 
-        Collection<Reservation> customerReservations = getCustomersReservation(customer);
+        Collection<Reservation> reservations = getCustomerReservation(customer);
 
-        if (customerReservations == null) {
-            customerReservations = new LinkedList<>();
+        // if no reservations, then create new Linked List
+
+        if (Objects.isNull(reservations)) {
+            reservations = new LinkedList<>();
         }
 
-        customerReservations.add(reservation);
-        reservations.put(customer.getEmail(), customerReservations);
+        reservations.add(reservation);
+        this.reservations.put(customer.getEmail(), reservations);
 
         return reservation;
     }
 
-    public Collection<IRoom> findRooms(final Date checkInDate, final Date checkOutDate) {
-        return findAvailableRooms(checkInDate, checkOutDate);
+    public Collection<IRoom> findRooms(Date checkInDate, Date checkOutDate){
+
+        // find rooms based on check-in and check-out dates
+        // create collections for available rooms and rooms already in use
+        Collection<IRoom> availableRooms = new LinkedList<>();
+        Collection<IRoom> reservedRooms = findReservedRooms(checkInDate, checkOutDate);
+
+        // add to available rooms list
+        for (IRoom room : rooms.values()) {
+            if (!reservedRooms.contains(room)) {
+                availableRooms.add(room);
+            }
+        }
+        // return list of available rooms
+        return availableRooms;
     }
 
-    public Collection<IRoom> findAlternativeRooms(final Date checkInDate, final Date checkOutDate) {
-       return findAvailableRooms(addDefaultPlusDays(checkInDate), addDefaultPlusDays(checkOutDate));
-    }
+    //find the reserved rooms between check-in and check-out dates
+    public Collection<IRoom> findReservedRooms(Date checkInDate, Date checkOutDate) {
 
-    private Collection<IRoom> findAvailableRooms(final Date checkInDate, final Date checkOutDate) {
-        final Collection<Reservation> allReservations = getAllReservations();
-        final Collection<IRoom> notAvailableRooms = new LinkedList<>();
+        // create collections of reservations and reserved rooms
+        Collection<Reservation> allReservations = getAllReservations();
+        Collection<IRoom> reservedRooms = new LinkedList<>();
 
-        for (Reservation reservation : allReservations) {
-            if (reservationOverlaps(reservation, checkInDate, checkOutDate)) {
-                notAvailableRooms.add(reservation.getRoom());
+        // add rooms to reserved room list if:
+
+        // 1) the check-in date is equal to or after the date of the reservation
+        //    AND
+        // 2) the check-out date is before or equal to the date of the reservation
+
+        for(Reservation reservation : allReservations){
+            if ((checkInDate.after(reservation.getCheckInDate()) || checkInDate.equals(reservation.getCheckInDate())) &&
+                    checkOutDate.before(reservation.getCheckOutDate()) ||
+                    checkOutDate.equals(reservation.getCheckOutDate())){
+                reservedRooms.add(reservation.getRoom());
             }
         }
 
-        return rooms.values().stream().filter(room -> notAvailableRooms.stream()
-                        .noneMatch(notAvailableRoom -> notAvailableRoom.equals(room)))
-                .collect(Collectors.toList());
+        // return a list of the reserved rooms
+        return reservedRooms;
     }
 
-    public Date addDefaultPlusDays(final Date date) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.add(Calendar.DATE, RECOMMENDED_ROOMS_DEFAULT_PLUS_DAYS);
+    // get all reservations in collection
 
-        return calendar.getTime();
+    private Collection<Reservation> getAllReservations() {
+
+        Collection<Reservation> allReservations = new LinkedList<>();
+        reservations.values().forEach(allReservations::addAll);
+        return allReservations;
     }
 
-    private boolean reservationOverlaps(final Reservation reservation, final Date checkInDate,
-                                        final Date checkOutDate){
-        return checkInDate.before(reservation.getCheckOutDate())
-                && checkOutDate.after(reservation.getCheckInDate());
-    }
+    // get customer reservations
 
-    public Collection<Reservation> getCustomersReservation(final Customer customer) {
+    public Collection<Reservation> getCustomerReservation(Customer customer) {
         return reservations.get(customer.getEmail());
     }
 
+
+    // display all reservations
     public void printAllReservation() {
-        final Collection<Reservation> reservations = getAllReservations();
+        Collection<Reservation> reservations = getAllReservations();
 
         if (reservations.isEmpty()) {
-            System.out.println("No reservations found.");
+            System.out.println("Sorry, no reservations were found");
         } else {
-            for (Reservation reservation : reservations) {
-                System.out.println(reservation + "\n");
-            }
+            reservations.forEach(System.out::println);
         }
-    }
-
-    private Collection<Reservation> getAllReservations() {
-        final Collection<Reservation> allReservations = new LinkedList<>();
-
-        for(Collection<Reservation> reservations : reservations.values()) {
-            allReservations.addAll(reservations);
-        }
-
-        return allReservations;
     }
 }
